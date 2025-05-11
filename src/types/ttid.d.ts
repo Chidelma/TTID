@@ -1,0 +1,1 @@
+type _ttid = `${string}-${number}-${string}`
