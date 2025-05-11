@@ -1,12 +1,12 @@
-export default class ULID {
+export default class {
 
     private static multiple = 10000
 
     private static minBase = 18
 
-    private static timeNow = () => (performance.now() + performance.timeOrigin) * ULID.multiple
+    private static timeNow = () => (performance.now() + performance.timeOrigin) * this.multiple
 
-    static isULID(_id: string) {
+    static isTTID(_id: string) {
 
         return _id.match(/^[A-Z0-9]+-(?:[2-9]|[1-2][0-9]|3[0-6])-[A-Z0-9]+$/i)
     }
@@ -18,22 +18,22 @@ export default class ULID {
 
     static generate() {
 
-        const time = ULID.timeNow()
+        const time = this.timeNow()
         
         const nums = String(time).split('').map(Number)
 
-        const base = ULID.getRandomBase(nums.reverse())
+        const base = this.getBase(nums.reverse())
 
         const timeCode = time.toString(base)
 
-        return `${timeCode}-${base}-${timeCode}`.toUpperCase() as _ulid
+        return `${timeCode}-${base}-${timeCode}`.toUpperCase() as _ttid
     }
 
-    private static getRandomBase(nums: number[]) {
+    private static getBase(nums: number[]) {
 
         return nums.reduce((prev, curr) => {
             
-            if(prev < ULID.minBase) prev += curr
+            if(prev < this.minBase) prev += curr
 
             return prev
 
@@ -42,22 +42,22 @@ export default class ULID {
 
     static update(_id: string) {
 
-        if (!ULID.isULID(_id)) throw new Error('Invalid ULID')
+        if (!this.isTTID(_id)) throw new Error('Invalid this')
 
         const [created, base] = _id.split('-')
 
-        const timeCode = ULID.timeNow().toString(Number(base))
+        const timeCode = this.timeNow().toString(Number(base))
 
-        return `${created}-${base}-${timeCode}`.toUpperCase() as _ulid
+        return `${created}-${base}-${timeCode}`.toUpperCase() as _ttid
     }
 
     static decodeTime(_id: string) {
 
-        if (!ULID.isULID(_id)) throw new Error('Invalid ULID')
+        if (!this.isTTID(_id)) throw new Error('Invalid this')
 
         const [created, base, updated] = _id.split('-')
 
-        const convertToMilliseconds = (timeCode: string) => Number((parseInt(timeCode, Number(base)) / ULID.multiple).toFixed(0))
+        const convertToMilliseconds = (timeCode: string) => Number((parseInt(timeCode, Number(base)) / this.multiple).toFixed(0))
 
         return {
             createdAt: convertToMilliseconds(created),

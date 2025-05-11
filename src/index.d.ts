@@ -1,1 +1,1 @@
-type _ulid = `${string}-${number}-${string}`
+/// <reference path="./types/ttid.d.ts" />

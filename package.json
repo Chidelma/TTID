@@ -17,19 +17,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Chidelma/BYOS.git"
+    "url": "git+https://github.com/Chidelma/TTID.git"
   },
   "license": "MIT",
   "keywords": [
-    "storage",
-    "database",
-    "s3",
-    "aws",
     "typescript",
-    "bun"
+    "bun",
+    "generate",
+    "identifer"
   ],
   "author": "Chidelma",
   "bugs": {
-    "url": "https://github.com/Chidelma/BYOS/issues"
+    "url": "https://github.com/Chidelma/TTID/issues"
   }
 }
