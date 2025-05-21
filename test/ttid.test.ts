@@ -7,33 +7,29 @@ describe("TTID", () => {
 
         const _id = TTID.generate()
 
-        const [created, base, updated] = _id.split('-')
+        console.log("Created", _id)
 
-        const { createdAt, updatedAt } = TTID.decodeTime(_id)
+        const { createdAt } = TTID.decodeTime(_id)
 
-        expect(Number(base)).toBeGreaterThanOrEqual(18)
-        expect(Number(base)).toBeLessThanOrEqual(36)
-        expect(created).toEqual(updated)
         expect(TTID.isTTID(_id)).not.toBeNull()
         expect(TTID.isUUID(_id)).toBeNull()
         expect(TTID.isUUID(Bun.randomUUIDv7())).not.toBeNull()
         expect(typeof createdAt).toBe('number')
-        expect(typeof updatedAt).toBe('number')
-        expect(createdAt).toEqual(updatedAt)
     })
 
     test("Update", async () => {
 
         const _id = TTID.generate()
         await Bun.sleep(1000)
-        const _newId = TTID.update(_id)
+        const _newId = TTID.generate(_id)
 
-        const [created, base, updated] = _newId.split('-')
+        console.log("Updated", _newId)
+
+        const [created, updated] = _newId.split('-')
 
         const { createdAt, updatedAt } = TTID.decodeTime(_newId)
 
-        expect(Number(base)).toBeGreaterThanOrEqual(18)
-        expect(Number(base)).toBeLessThanOrEqual(36)
+        expect(updated).not.toBeUndefined()
         expect(created).not.toEqual(updated)
         expect(TTID.isTTID(_newId)).not.toBeNull()
         expect(TTID.isUUID(_newId)).toBeNull()
@@ -41,6 +37,68 @@ describe("TTID", () => {
         expect(typeof createdAt).toBe('number')
         expect(typeof updatedAt).toBe('number')
         expect(createdAt).not.toEqual(updatedAt)
+        expect(updatedAt).not.toBeUndefined()
+        expect(updatedAt).toBeGreaterThan(createdAt)
+    })
+
+    test('Created-Deleted', async () => {
+
+        const _id = TTID.generate()
+        await Bun.sleep(1000)
+        const _newId = TTID.generate(_id, true)
+
+        console.log("Created-Deleted", _newId)
+
+        const [created, updated, deleted] = _newId.split('-')
+
+        const { createdAt, updatedAt, deletedAt } = TTID.decodeTime(_newId)
+
+        expect(updated).toEqual('X')
+        expect(deleted).not.toBeUndefined()
+        expect(created).not.toEqual(deleted)
+        expect(TTID.isTTID(_newId)).not.toBeNull()
+        expect(TTID.isUUID(_newId)).toBeNull()
+        expect(_id).not.toEqual(_newId)
+        expect(typeof createdAt).toBe('number')
+        expect(typeof deletedAt).toBe('number')
+        expect(createdAt).not.toEqual(updatedAt)
+        expect(updatedAt).toBeUndefined()
+        expect(deletedAt).not.toBeUndefined()
+        expect(deletedAt).toBeGreaterThan(createdAt)
+    })
+
+    test('Created-Updated-Deleted', async () => {
+
+        const _id = TTID.generate()
+        await Bun.sleep(1000)
+        const _newId = TTID.generate(_id)
+        await Bun.sleep(1000)
+        const _deletedId = TTID.generate(_newId, true)
+
+        console.log("Created-Updated-Deleted", _deletedId)
+
+        const [created, updated, deleted] = _deletedId.split('-')
+
+        const { createdAt, updatedAt, deletedAt } = TTID.decodeTime(_deletedId)
+        
+        expect(updated).not.toEqual('X')
+        expect(deleted).not.toBeUndefined()
+        expect(created).not.toEqual(deleted)
+        expect(created).not.toEqual(updated)
+        expect(updated).not.toEqual(deleted)
+        expect(TTID.isTTID(_newId)).not.toBeNull()
+        expect(TTID.isUUID(_newId)).toBeNull()
+        expect(_id).not.toEqual(_newId)
+        expect(_newId).not.toEqual(_deletedId)
+        expect(typeof createdAt).toBe('number')
+        expect(typeof deletedAt).toBe('number')
+        expect(typeof updatedAt).toBe("number")
+        expect(createdAt).not.toEqual(updatedAt)
+        expect(createdAt).not.toEqual(deletedAt)
+        expect(updatedAt).not.toEqual(deletedAt)
+        expect(updatedAt).not.toBeUndefined()
+        expect(deletedAt).not.toBeUndefined()
+        expect(deletedAt).toBeGreaterThan(createdAt)
         expect(updatedAt).toBeGreaterThan(createdAt)
     })
 })
