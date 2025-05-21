@@ -2,13 +2,15 @@ export default class {
 
     private static multiple = 10000
 
-    private static minBase = 18
+    private static base = 36
+
+    private static placeholder = 'X'
 
     private static timeNow = () => (performance.now() + performance.timeOrigin) * this.multiple
 
     static isTTID(_id: string) {
 
-        return _id.match(/^[A-Z0-9]+-(?:[2-9]|[1-2][0-9]|3[0-6])-[A-Z0-9]+$/i)
+        return _id.match(/^[A-Z0-9]+(-[A-Z0-9]+){0,2}$/i)
     }
 
     static isUUID(_id: string) {
@@ -16,52 +18,52 @@ export default class {
         return _id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     }
 
-    static generate() {
+    static generate(_id?: string, del: boolean = false) {
+
+        if(_id && this.isTTID(_id) && _id.split('-').length === 3) throw new Error('This identifer can no longer be modified') 
 
         const time = this.timeNow()
         
-        const nums = String(time).split('').map(Number)
+        if(_id && this.isTTID(_id) && del) {
 
-        const base = this.getBase(nums.reverse())
+            const [created, updated] = _id.split('-')
 
-        const timeCode = time.toString(base)
+            const deleted = time.toString(this.base)
 
-        return `${timeCode}-${base}-${timeCode}`.toUpperCase() as _ttid
-    }
+            return `${created}-${updated ?? this.placeholder}-${deleted}`.toUpperCase() as _ttid
+        }
 
-    private static getBase(nums: number[]) {
+        if(_id && this.isTTID(_id)) {
 
-        return nums.reduce((prev, curr) => {
-            
-            if(prev < this.minBase) prev += curr
+            const [created] = _id.split('-')
 
-            return prev
+            const updated = time.toString(this.base)
 
-        }, 0)
-    }
+            return `${created}-${updated}`.toUpperCase() as _ttid
+        }
 
-    static update(_id: string) {
+        if(_id && !this.isTTID(_id)) throw new Error("Invalid TTID!")
 
-        if (!this.isTTID(_id)) throw new Error('Invalid this')
+        const timeCode = time.toString(this.base)
 
-        const [created, base] = _id.split('-')
-
-        const timeCode = this.timeNow().toString(Number(base))
-
-        return `${created}-${base}-${timeCode}`.toUpperCase() as _ttid
+        return timeCode.toUpperCase() as _ttid
     }
 
     static decodeTime(_id: string) {
 
         if (!this.isTTID(_id)) throw new Error('Invalid this')
 
-        const [created, base, updated] = _id.split('-')
+        const [created, updated, deleted] = _id.split('-')
 
-        const convertToMilliseconds = (timeCode: string) => Number((parseInt(timeCode, Number(base)) / this.multiple).toFixed(0))
+        const convertToMilliseconds = (timeCode: string) => Number((parseInt(timeCode, this.base) / this.multiple).toFixed(0))
 
-        return {
-            createdAt: convertToMilliseconds(created),
-            updatedAt: convertToMilliseconds(updated)
+        const timestamps: _timestamps = {
+            createdAt: convertToMilliseconds(created)
         }
+
+        if(updated && updated !== this.placeholder) timestamps.updatedAt = convertToMilliseconds(updated)
+        if(deleted) timestamps.deletedAt = convertToMilliseconds(deleted)
+
+        return timestamps
     }
 }                                      
