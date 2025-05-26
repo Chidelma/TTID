@@ -1,23 +1,19 @@
 # TTID (Time-Tagged Identifier)
 
-A lightweight, time-based identifier generator that captures both creation and update timestamps.
+A lightweight, time-based identifier generator that tracks creation, update, and deletion timestamps using a progressive format.
 
 ## Overview
 
-TTID creates unique identifiers with the following structure:
-```
-[CREATION_TIMESTAMP]-[BASE]-[UPDATE_TIMESTAMP]
-```
+TTID creates unique identifiers with a progressive structure:
+- **Created:** `[CREATION_TIMESTAMP]`
+- **Updated:** `[CREATION_TIMESTAMP]-[UPDATE_TIMESTAMP]`
+- **Deleted:** `[CREATION_TIMESTAMP]-[UPDATE_TIMESTAMP]-[DELETION_TIMESTAMP]`
 
-Each TTID contains:
-- A creation timestamp encoded in a variable base
-- The base used for encoding (between 18 and 36)
-- An update timestamp (initially identical to creation timestamp)
-
-This format allows for:
-- Guaranteed uniqueness due to high-resolution timestamps
-- The ability to track when an ID was created and last updated
-- Efficient encoding with variable base to reduce string length
+Each TTID segment contains:
+- High-resolution timestamps encoded in base-36
+- Progressive expansion to track lifecycle states
+- Compact 11-character timestamps for efficiency
+- Immutable deletion state (cannot be modified once deleted)
 
 ## Installation
 
@@ -27,24 +23,48 @@ npm install ttid
 
 ## Usage
 
-### Basic Usage
+### Basic ID Generation
 
 ```typescript
 import TTID from 'ttid';
 
-// Generate a new TTID
-const id = TTID.generate();
-console.log(id);
-// Example output: "143GV1-23-143GV1"
+// Generate a new TTID (creation only)
+const newId = TTID.generate();
+console.log(newId);
+// Example output: "1A2B3C4D5E6"
 
 // Verify if a string is a valid TTID
-const isValid = TTID.isULID(id);
-console.log(isValid); // true
+const isValid = TTID.isTTID(newId);
+console.log(isValid); // Returns Date object if valid, null if invalid
+```
 
-// Update an existing TTID (updates the timestamp portion)
-const updatedId = TTID.update(id);
-console.log(updatedId);
-// Example output: "143GV1-23-143JB5"
+### Progressive Updates
+
+```typescript
+import TTID from 'ttid';
+
+// Start with a new ID
+let id = TTID.generate();
+console.log(id); // "1A2B3C4D5E6"
+
+// Update the ID (adds update timestamp)
+id = TTID.generate(id);
+console.log(id); // "1A2B3C4D5E6-F7G8H9I0J1"
+
+// Update again (replaces update timestamp)
+id = TTID.generate(id);
+console.log(id); // "1A2B3C4D5E6-K2L3M4N5O6"
+
+// Mark as deleted (adds deletion timestamp - final state)
+id = TTID.generate(id, true);
+console.log(id); // "1A2B3C4D5E6-K2L3M4N5O6-P7Q8R9S0T1"
+
+// Attempting to modify a deleted ID throws an error
+try {
+  TTID.generate(id); // Throws: "This identifier can no longer be modified"
+} catch (error) {
+  console.error(error.message);
+}
 ```
 
 ### Decoding Timestamps
@@ -52,94 +72,160 @@ console.log(updatedId);
 ```typescript
 import TTID from 'ttid';
 
-// Generate a TTID
-const id = TTID.generate();
-console.log(id); // "143KP2-25-143KP2"
-
-// Wait a few seconds
+// Create and update an ID
+let id = TTID.generate();
 setTimeout(() => {
-  // Update the TTID
-  const updatedId = TTID.update(id);
-  console.log(updatedId); // "143KP2-25-143LQ8"
+  id = TTID.generate(id);
   
-  // Decode the timestamps
-  const times = TTID.decodeTime(updatedId);
-  console.log(times);
-  // Example output: 
-  // {
-  //   createdAt: 1651234567890,
-  //   updatedAt: 1651234572345
-  // }
-  
-  // Convert to readable dates
-  console.log({
-    created: new Date(times.createdAt),
-    updated: new Date(times.updatedAt)
-  });
-}, 5000);
+  setTimeout(() => {
+    id = TTID.generate(id, true); // Mark as deleted
+    
+    // Decode all timestamps
+    const times = TTID.decodeTime(id);
+    console.log(times);
+    // Example output:
+    // {
+    //   createdAt: 1651234567890,
+    //   updatedAt: 1651234572345,
+    //   deletedAt: 1651234578901
+    // }
+    
+    // Convert to readable dates
+    console.log({
+      created: new Date(times.createdAt),
+      updated: times.updatedAt ? new Date(times.updatedAt) : null,
+      deleted: times.deletedAt ? new Date(times.deletedAt) : null
+    });
+    
+  }, 2000);
+}, 1000);
 ```
 
-### Type Checking
-
-The package includes TypeScript type definitions:
+### Working with Different States
 
 ```typescript
-import TTID, { _ttid } from 'ttid';
+import TTID from 'ttid';
 
-// Type checking for TTID strings
-function processId(id: _ttid) {
-  // This function only accepts valid TTIDs
-  return TTID.update(id);
+// Check ID states
+function analyzeId(id: string) {
+  const validation = TTID.isTTID(id);
+  
+  if (!validation) {
+    console.log('Invalid TTID');
+    return;
+  }
+  
+  const segments = id.split('-');
+  const times = TTID.decodeTime(id);
+  
+  console.log(`ID State: ${getIdState(segments.length)}`);
+  console.log(`Created: ${new Date(times.createdAt)}`);
+  
+  if (times.updatedAt) {
+    console.log(`Updated: ${new Date(times.updatedAt)}`);
+  }
+  
+  if (times.deletedAt) {
+    console.log(`Deleted: ${new Date(times.deletedAt)}`);
+  }
 }
 
-// This works
-const id = TTID.generate();
-processId(id);
+function getIdState(segmentCount: number) {
+  switch (segmentCount) {
+    case 1: return 'Created';
+    case 2: return 'Updated';
+    case 3: return 'Deleted';
+    default: return 'Unknown';
+  }
+}
 
-// This will cause a TypeScript error
-processId("not-a-valid-id");
+// Examples
+const createdId = TTID.generate();
+analyzeId(createdId); // ID State: Created
+
+const updatedId = TTID.generate(createdId);
+analyzeId(updatedId); // ID State: Updated
+
+const deletedId = TTID.generate(updatedId, true);
+analyzeId(deletedId); // ID State: Deleted
+```
+
+### Error Handling
+
+```typescript
+import TTID from 'ttid';
+
+// Invalid ID format
+try {
+  TTID.generate('invalid-id');
+} catch (error) {
+  console.error(error.message); // "Invalid TTID!"
+}
+
+// Attempting to modify deleted ID
+const id = TTID.generate();
+const updated = TTID.generate(id);
+const deleted = TTID.generate(updated, true);
+
+try {
+  TTID.generate(deleted);
+} catch (error) {
+  console.error(error.message); // "This identifier can no longer be modified"
+}
+
+// Invalid format for decoding
+try {
+  TTID.decodeTime('not-a-ttid');
+} catch (error) {
+  console.error(error.message); // "Invalid Format!"
+}
 ```
 
 ## API Reference
 
-### `TTID.generate()`
+### `TTID.generate(id?: string, del?: boolean)`
 
-Generates a new TTID.
-
-**Returns:** `_ttid` - A string in the format `[CREATION_TIMESTAMP]-[BASE]-[UPDATE_TIMESTAMP]`
-
-### `TTID.update(id: string)`
-
-Updates the timestamp portion of an existing TTID.
+Generates a new TTID or updates an existing one.
 
 **Parameters:**
-- `id` - An existing TTID string
+- `id` (optional) - An existing TTID to update
+- `del` (optional) - Set to `true` to mark the ID as deleted
 
-**Returns:** `_ttid` - A new TTID with the same creation timestamp but updated timestamp
+**Returns:** `_ttid` - A TTID string
 
-**Throws:** Error if the input is not a valid TTID
+**Behavior:**
+- No parameters: Creates new ID `[TIMESTAMP]`
+- Valid TTID provided: Updates to `[CREATED]-[NEW_TIMESTAMP]`
+- Valid TTID + `del=true`: Marks as deleted `[CREATED]-[UPDATED]-[DELETED_TIMESTAMP]`
+
+**Throws:** 
+- Error if provided ID is invalid
+- Error if attempting to modify a deleted ID (3 segments)
 
 ### `TTID.decodeTime(id: string)`
 
-Decodes the creation and update timestamps from a TTID.
+Decodes timestamps from a TTID.
 
 **Parameters:**
 - `id` - A TTID string
 
-**Returns:** Object with the following properties:
-- `createdAt` - The creation timestamp in milliseconds
-- `updatedAt` - The update timestamp in milliseconds
+**Returns:** `_timestamps` object with:
+- `createdAt` - Creation timestamp in milliseconds
+- `updatedAt` (optional) - Update timestamp in milliseconds
+- `deletedAt` (optional) - Deletion timestamp in milliseconds
 
-**Throws:** Error if the input is not a valid TTID
+**Throws:** Error if the format is invalid
 
-### `TTID.isULID(id: string)`
+### `TTID.isTTID(id: string)`
 
-Checks if a string is a valid TTID.
+Validates a TTID and returns creation date if valid.
 
 **Parameters:**
-- `id` - A string to check
+- `id` - A string to validate
 
-**Returns:** `boolean` - `true` if the string is a valid TTID, `false` otherwise
+**Returns:** 
+- `Date` object (creation date) if valid
+- `null` if invalid
 
 ### `TTID.isUUID(id: string)`
 
@@ -148,38 +234,58 @@ Checks if a string is a valid UUID.
 **Parameters:**
 - `id` - A string to check
 
-**Returns:** `boolean` - `true` if the string is a valid UUID, `false` otherwise
+**Returns:** `RegExpMatchArray | null` - Match result or null
 
-## How It Works
+## Format Specification
 
-1. The `generate()` method creates a high-resolution timestamp using `performance.now()` and `performance.timeOrigin`
-2. This timestamp is multiplied by 10,000 to ensure uniqueness
-3. A variable base is calculated (between 18 and 36) based on the timestamp digits
-4. The timestamp is converted to a string representation in the calculated base
-5. The ID is constructed as `[ENCODED_TIMESTAMP]-[BASE]-[ENCODED_TIMESTAMP]`
+TTIDs follow a strict format:
+- Base-36 encoding (0-9, A-Z)
+- 11-character timestamps
+- Hyphen-separated segments
+- Progressive structure
 
-When `update()` is called:
-1. The creation timestamp and base are preserved
-2. A new timestamp is generated and encoded using the same base
-3. The ID is updated to `[ORIGINAL_ENCODED_TIMESTAMP]-[BASE]-[NEW_ENCODED_TIMESTAMP]`
+**Valid Patterns:**
+- `[A-Z0-9]{11}` - Created only
+- `[A-Z0-9]{11}-[A-Z0-9]{1,11}` - Created + Updated
+- `[A-Z0-9]{11}-[A-Z0-9]{1,11}-[A-Z0-9]{1,11}` - Created + Updated + Deleted
 
-## Comparison with Other ID Systems
+**Special Cases:**
+- Placeholder 'X' may appear in update position for certain states
+- Deleted IDs cannot be modified further
 
-| Feature | TTID | UUID | ULID |
+## Lifecycle States
+
+| State | Format | Segments | Modifiable |
+|-------|--------|----------|------------|
+| Created | `TIMESTAMP` | 1 | ✅ |
+| Updated | `CREATED-UPDATED` | 2 | ✅ |
+| Deleted | `CREATED-UPDATED-DELETED` | 3 | ❌ |
+
+## Comparison with Other Systems
+
+| Feature | TTID | UUID | ULID | 
 |---------|------|------|------|
-| Time-based | ✅ | ❌ (v1, v4) / ✅ (v7) | ✅ |
-| Tracks updates | ✅ | ❌ | ❌ |
-| Sortable | ✅ | ❌ | ✅ |
-| Random component | ❌ | ✅ | ✅ |
-| Fixed format | ❌ | ✅ | ✅ |
-| Binary efficiency | ⚠️ | ✅ | ✅ |
+| Progressive states | ✅ | ❌ | ❌ |
+| Soft delete tracking | ✅ | ❌ | ❌ |
+| Immutable final state | ✅ | ❌ | ❌ |
+| Compact encoding | ✅ | ❌ | ✅ |
+| Time-based | ✅ | ⚠️ | ✅ |
+| Fixed length | ❌ | ✅ | ✅ |
 
 ## Use Cases
 
-- Database records that need to track both creation and modification times
-- Distributed systems where update history matters
-- Systems that need to efficiently encode ID information without relying on database lookups
-- Applications where IDs need to be human-readable but still unique
+- **Database Records**: Track entity lifecycle (created → updated → soft deleted)
+- **Audit Systems**: Maintain chronological history in the ID itself
+- **Document Management**: Version control with embedded timestamps
+- **API Resources**: RESTful endpoints with state-aware identifiers
+- **Event Sourcing**: Compact event identifiers with temporal information
+
+## Performance Considerations
+
+- Base-36 encoding provides compact representation
+- Progressive format minimizes storage for simple states
+- High-resolution timestamps ensure uniqueness in high-frequency scenarios
+- Validation includes timestamp parsing for integrity checking
 
 ## License
 
