@@ -12,16 +12,26 @@ export default class {
     
     static isTTID(_id: string) {
 
-        if(!this.isTTIDFormat(_id)) throw new Error(`Invalid Format!`)
+        let isValid: RegExpMatchArray | Date | null = this.isTTIDFormat(_id)
+
+        if(!isValid) return isValid
 
         const { createdAt, updatedAt, deletedAt } = this.decodeTime(_id)
 
-        new Date(createdAt)
+        try {
+            
+            if(updatedAt) new Date(updatedAt)
 
-        if(updatedAt) new Date(updatedAt)
-        if(deletedAt) new Date(deletedAt)
-         
-        return true
+            if(deletedAt) new Date(deletedAt)
+            
+            isValid = new Date(createdAt)
+
+        } catch {
+
+            isValid = null
+        }
+
+        return isValid
     }
 
     static isUUID(_id: string) {
