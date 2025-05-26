@@ -10,7 +10,7 @@ declare module "@vyckr/ttid" {
 
     export default class {
 
-        static isTTID(_id: string): boolean
+        static isTTID(_id: string): RegExpMatchArray | Date | null
 
         static isUUID(_id: string): RegExpMatchArray | null
 
