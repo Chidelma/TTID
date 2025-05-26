@@ -16,9 +16,9 @@ export default class {
 
         if(!isValid) return isValid
 
-        const { createdAt, updatedAt, deletedAt } = this.decodeTime(_id)
-
         try {
+
+            const { createdAt, updatedAt, deletedAt } = this.decodeTime(_id)
             
             if(updatedAt) new Date(updatedAt)
 
