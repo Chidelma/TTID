@@ -7,11 +7,11 @@ describe("TTID", () => {
 
         const _id = TTID.generate()
 
-        console.log("Created", _id)
+        console.log("Created", _id, _id.length)
 
         const { createdAt } = TTID.decodeTime(_id)
 
-        expect(TTID.isTTID(_id)).not.toBeNull()
+        expect(TTID.isTTID(_id)).toBeTrue()
         expect(TTID.isUUID(_id)).toBeNull()
         expect(TTID.isUUID(Bun.randomUUIDv7())).not.toBeNull()
         expect(typeof createdAt).toBe('number')
@@ -23,7 +23,7 @@ describe("TTID", () => {
         await Bun.sleep(1000)
         const _newId = TTID.generate(_id)
 
-        console.log("Updated", _newId)
+        console.log("Updated", _newId, _newId.length)
 
         const [created, updated] = _newId.split('-')
 
@@ -31,7 +31,7 @@ describe("TTID", () => {
 
         expect(updated).not.toBeUndefined()
         expect(created).not.toEqual(updated)
-        expect(TTID.isTTID(_newId)).not.toBeNull()
+        expect(TTID.isTTID(_newId)).toBeTrue()
         expect(TTID.isUUID(_newId)).toBeNull()
         expect(_id).not.toEqual(_newId)
         expect(typeof createdAt).toBe('number')
@@ -47,7 +47,7 @@ describe("TTID", () => {
         await Bun.sleep(1000)
         const _newId = TTID.generate(_id, true)
 
-        console.log("Created-Deleted", _newId)
+        console.log("Created-Deleted", _newId, _newId.length)
 
         const [created, updated, deleted] = _newId.split('-')
 
@@ -56,7 +56,7 @@ describe("TTID", () => {
         expect(updated).toEqual('X')
         expect(deleted).not.toBeUndefined()
         expect(created).not.toEqual(deleted)
-        expect(TTID.isTTID(_newId)).not.toBeNull()
+        expect(TTID.isTTID(_newId)).toBeTrue()
         expect(TTID.isUUID(_newId)).toBeNull()
         expect(_id).not.toEqual(_newId)
         expect(typeof createdAt).toBe('number')
@@ -75,7 +75,7 @@ describe("TTID", () => {
         await Bun.sleep(1000)
         const _deletedId = TTID.generate(_newId, true)
 
-        console.log("Created-Updated-Deleted", _deletedId)
+        console.log("Created-Updated-Deleted", _deletedId, _deletedId.length)
 
         const [created, updated, deleted] = _deletedId.split('-')
 
@@ -86,7 +86,7 @@ describe("TTID", () => {
         expect(created).not.toEqual(deleted)
         expect(created).not.toEqual(updated)
         expect(updated).not.toEqual(deleted)
-        expect(TTID.isTTID(_newId)).not.toBeNull()
+        expect(TTID.isTTID(_newId)).toBeTrue()
         expect(TTID.isUUID(_newId)).toBeNull()
         expect(_id).not.toEqual(_newId)
         expect(_newId).not.toEqual(_deletedId)

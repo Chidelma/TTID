@@ -8,9 +8,20 @@ export default class {
 
     private static timeNow = () => (performance.now() + performance.timeOrigin) * this.multiple
 
+    private static isTTIDFormat = (_id: string) => _id.match(/^[A-Z0-9]{11}(-[A-Z0-9]{1,11}){0,2}$/i)
+    
     static isTTID(_id: string) {
 
-        return _id.match(/^[A-Z0-9]+(-[A-Z0-9]+){0,2}$/i)
+        if(!this.isTTIDFormat(_id)) throw new Error(`Invalid Format!`)
+
+        const { createdAt, updatedAt, deletedAt } = this.decodeTime(_id)
+
+        new Date(createdAt)
+
+        if(updatedAt) new Date(updatedAt)
+        if(deletedAt) new Date(deletedAt)
+         
+        return true
     }
 
     static isUUID(_id: string) {
@@ -51,7 +62,7 @@ export default class {
 
     static decodeTime(_id: string) {
 
-        if (!this.isTTID(_id)) throw new Error('Invalid this')
+        if(!this.isTTIDFormat(_id)) throw new Error(`Invalid Format!`)
 
         const [created, updated, deleted] = _id.split('-')
 
