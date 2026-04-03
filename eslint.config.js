@@ -23,6 +23,6 @@ export default [
     },
     prettierConfig,
     {
-        ignores: ['bin/**', 'node_modules/**']
+        ignores: ['bin/**', 'node_modules/**', '**/*.d.ts']
     }
 ]
