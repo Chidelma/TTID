@@ -1,12 +1,14 @@
-export type _ttid = string | `${string}-${string}` | `${string}-${string}-${string}`
-
-export interface _timestamps {
-    createdAt: number
-    updatedAt?: number
-    deletedAt?: number
-}
-
 declare module "@vyckr/ttid" {
+
+    /** Branded string type representing a TTID in one of its three lifecycle states. */
+    export type _ttid = string | `${string}-${string}` | `${string}-${string}-${string}`
+
+    /** Decoded timestamps extracted from a TTID. */
+    export interface _timestamps {
+        createdAt: number
+        updatedAt?: number
+        deletedAt?: number
+    }
 
     export default class TTID {
 
@@ -42,3 +44,7 @@ declare module "@vyckr/ttid" {
         static decodeTime(_id: string): _timestamps
     }
 }
+
+// Global ambient aliases so src/index.ts can reference these types without an import.
+type _ttid = import("@vyckr/ttid")._ttid
+type _timestamps = import("@vyckr/ttid")._timestamps
