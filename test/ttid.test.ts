@@ -213,6 +213,11 @@ describe("TTID", () => {
 
             expect(TTID.isTTID(Bun.randomUUIDv7())).toBeNull()
         })
+
+        test('rejects oversized input without regex evaluation', () => {
+
+            expect(TTID.isTTID('A'.repeat(37))).toBeNull()
+        })
     })
 
     // ─── decodeTime() ────────────────────────────────────────────────────────────
@@ -269,7 +274,7 @@ describe("TTID", () => {
 
         test('throws on out-of-range timestamp segment', () => {
 
-            expect(() => TTID.decodeTime('00000000000')).toThrow('Timestamp out of valid range')
+            expect(() => TTID.decodeTime('00000000000')).toThrow('Invalid timestamp encoding')
         })
     })
 

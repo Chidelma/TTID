@@ -41,6 +41,8 @@ export default class TTID {
      */
     static isTTID(_id: string): Date | null {
 
+        if (!_id || _id.length > 36) return null
+
         if (!this.TTID_PATTERN.test(_id)) return null
 
         try {
@@ -121,7 +123,7 @@ export default class TTID {
             const ms = Number((parseInt(timeCode, this.BASE) / this.PRECISION).toFixed(0))
 
             if (!isFinite(ms) || ms < this.MIN_TIMESTAMP_MS || ms > this.MAX_TIMESTAMP_MS) {
-                throw new Error(`Timestamp out of valid range in segment: ${timeCode}`)
+                throw new Error('Invalid timestamp encoding')
             }
 
             return ms
