@@ -1,6 +1,6 @@
 {
-  "name": "@vyckr/ttid",
-  "version": "1.3.2",
+  "name": "@delma/ttid",
+  "version": "1.3.3",
   "main": "./src/index.ts",
   "types": "./src/types/index.d.ts",
   "scripts": {
