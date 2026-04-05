@@ -287,6 +287,21 @@ TTIDs follow a strict format:
 - High-resolution timestamps ensure uniqueness in high-frequency scenarios
 - Validation includes timestamp parsing for integrity checking
 
+## Security
+
+`_ttid` is a TypeScript template-literal type, not a runtime-enforced brand. TypeScript alone cannot prevent a plain `string` from being used where a `_ttid` is expected.
+
+**Rule:** always obtain TTID values via `TTID.generate()` or validate them with `TTID.isTTID()` before using them in any security-sensitive context (database keys, access-control checks, audit logs).
+
+```typescript
+const raw: string = externalInput()
+const valid = TTID.isTTID(raw)   // returns Date | null
+if (!valid) throw new Error('Invalid identifier')
+// safe to use raw as _ttid from here
+```
+
+Input length is bounded to 36 characters before any regex evaluation, preventing CPU exhaustion from pathological inputs.
+
 ## License
 
 MIT
