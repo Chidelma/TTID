@@ -18,7 +18,7 @@ Each TTID segment contains:
 ## Installation
 
 ```bash
-npm install ttid
+npm install @delma/ttid
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ npm install ttid
 ### Basic ID Generation
 
 ```typescript
-import TTID from 'ttid';
+import TTID from '@delma/ttid';
 
 // Generate a new TTID (creation only)
 const newId = TTID.generate();
@@ -41,7 +41,7 @@ console.log(isValid); // Returns Date object if valid, null if invalid
 ### Progressive Updates
 
 ```typescript
-import TTID from 'ttid';
+import TTID from '@delma/ttid';
 
 // Start with a new ID
 let id = TTID.generate();
@@ -70,7 +70,7 @@ try {
 ### Decoding Timestamps
 
 ```typescript
-import TTID from 'ttid';
+import TTID from '@delma/ttid';
 
 // Create and update an ID
 let id = TTID.generate();
@@ -104,7 +104,7 @@ setTimeout(() => {
 ### Working with Different States
 
 ```typescript
-import TTID from 'ttid';
+import TTID from '@delma/ttid';
 
 // Check ID states
 function analyzeId(id: string) {
@@ -153,7 +153,7 @@ analyzeId(deletedId); // ID State: Deleted
 ### Error Handling
 
 ```typescript
-import TTID from 'ttid';
+import TTID from '@delma/ttid';
 
 // Invalid ID format
 try {
