@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Chidelma/TTID.git"
+    "url": "git+https://github.com/d31ma/TTID.git"
   },
   "license": "MIT",
   "keywords": [
@@ -35,6 +35,6 @@
   ],
   "author": "Chidelma",
   "bugs": {
-    "url": "https://github.com/Chidelma/TTID/issues"
+    "url": "https://github.com/d31ma/TTID/issues"
   }
 }
